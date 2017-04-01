@@ -9,6 +9,10 @@
 #
 # SOURCE_DATE_EPOCH: the source release date as seconds since the epoch, as
 #   specified by <https://reproducible-builds.org/specs/source-date-epoch/>
+#
+# BUILD_PATH_PREFIX_MAP: the package name and version mapped to the top-level
+#   absolute package directory, as specified by
+#   <https://reproducible-builds.org/specs/build-path-prefix-map/>
 
 dpkg_late_eval ?= $(or $(value DPKG_CACHE_$(1)),$(eval DPKG_CACHE_$(1) := $(shell $(2)))$(value DPKG_CACHE_$(1)))
 
@@ -20,5 +24,14 @@ DEB_VERSION_UPSTREAM = $(call dpkg_late_eval,DEB_VERSION_UPSTREAM,echo '$(DEB_VE
 DEB_DISTRIBUTION = $(call dpkg_late_eval,DEB_DISTRIBUTION,dpkg-parsechangelog -SDistribution)
 
 SOURCE_DATE_EPOCH ?= $(call dpkg_late_eval,SOURCE_DATE_EPOCH,dpkg-parsechangelog -STimestamp)
-
 export SOURCE_DATE_EPOCH
+
+bppm_enquote = $(subst :,%.,$(subst =,%+,$(subst %,%\#,$(1))))
+BUILD_PATH_PREFIX_MAP ?= $(call dpkg_late_eval,BUILD_PATH_PREFIX_MAP,echo\
+"$${BUILD_PATH_PREFIX_MAP:+$$BUILD_PATH_PREFIX_MAP:}"$(call\
+bppm_enquote,$(DEB_SOURCE)_$(DEB_VERSION))=$(call\
+bppm_enquote,$(CURDIR)))
+export BUILD_PATH_PREFIX_MAP
+
+# FIXME: "export" makes dpkg_late_eval completely pointless since it forces
+# evaluation. This is true for both SOURCE_DATE_EPOCH and BUILD_PATH_PREFIX_MAP

@@ -43,7 +43,7 @@ use Dpkg::Version;
 use Dpkg::Control;
 use Dpkg::Control::Info;
 use Dpkg::Changelog::Parse;
-use Dpkg::Path qw(find_command);
+use Dpkg::Path qw(find_command bppm_append);
 use Dpkg::IPC;
 
 textdomain('dpkg-dev');
@@ -449,6 +449,8 @@ if ($changedby) {
 
 # <https://reproducible-builds.org/specs/source-date-epoch/>
 $ENV{SOURCE_DATE_EPOCH} ||= $changelog->{timestamp} || time;
+# <https://reproducible-builds.org/specs/build-path-prefix-map/>
+bppm_append("${pkg}_${version}", $cwd);
 
 my @arch_opts;
 push @arch_opts, ('--host-arch', $host_arch) if $host_arch;

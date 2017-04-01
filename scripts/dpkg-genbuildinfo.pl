@@ -249,11 +249,14 @@ sub collect_installed_builddeps {
 sub cleansed_environment {
     # Consider only whitelisted variables which are not supposed to leak
     # local user information.
+    my @env_whitelist = get_build_env_whitelist();
+    # See <https://reproducible-builds.org/specs/build-path-prefix-map>.
+    push(@env_whitelist, "BUILD_PATH_PREFIX_MAP") if ($use_feature{path});
     my %env = map {
         $_ => $ENV{$_}
     } grep {
         exists $ENV{$_}
-    } get_build_env_whitelist();
+    } @env_whitelist;
 
     # Record flags from dpkg-buildflags.
     my $bf = Dpkg::BuildFlags->new();

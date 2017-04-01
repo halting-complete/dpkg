@@ -30,6 +30,7 @@ our @EXPORT_OK = qw(
     get_pkg_root_dir
     guess_pkg_root_dir
     relative_to_pkg_root
+    bppm_append
 );
 
 use Exporter qw(import);
@@ -275,6 +276,22 @@ sub find_build_file($) {
     return @files if wantarray;
     return $files[0] if scalar @files;
     return;
+}
+
+sub bppm_enquote {
+    my $part = shift;
+    $part =~ s/%/%#/g;
+    $part =~ s/=/%+/g;
+    $part =~ s/:/%./g;
+    return $part;
+}
+
+sub bppm_append($$) {
+    my $dst = shift;
+    my $src = shift;
+    my $curmap = $ENV{"BUILD_PATH_PREFIX_MAP"};
+    $ENV{"BUILD_PATH_PREFIX_MAP"} = ($curmap ? $curmap . ":" : "") .
+        bppm_enquote($dst) . "=" . bppm_enquote($src);
 }
 
 =back
